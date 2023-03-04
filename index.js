@@ -1,6 +1,6 @@
 const express = require("express");
 const morgan = require("morgan");
-const cors = require('cors')
+const cors = require("cors");
 const { request, response } = require("express/lib/express");
 const app = express();
 
@@ -26,7 +26,7 @@ let persons = [
     number: "39-23-6423122",
   },
 ];
-app.use(cors())
+app.use(cors());
 
 morgan.token("extentionJSON", (request, response) =>
   JSON.stringify(request.body)
@@ -36,6 +36,7 @@ morgan.format(
   ":method :url :status :res[content-length] - :response-time ms :extentionJSON"
 );
 app.use(morgan("post"));
+app.use(express.static("build"));
 
 app.get("/api/persons", (request, response) => {
   response.json(persons);
