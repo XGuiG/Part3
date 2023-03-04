@@ -36,6 +36,7 @@ morgan.format(
   ":method :url :status :res[content-length] - :response-time ms :extentionJSON"
 );
 app.use(morgan("post"));
+app.use(express.static('build'))
 
 app.get("/api/persons", (request, response) => {
   response.json(persons);
