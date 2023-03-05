@@ -1,32 +1,14 @@
+require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
-const cors = require('cors')
+const cors = require("cors");
 const { request, response } = require("express/lib/express");
 const app = express();
 
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
-app.use(cors())
+const Person = require("./models/person");
+
+let persons = [];
+app.use(cors());
 
 morgan.token("extentionJSON", (request, response) =>
   JSON.stringify(request.body)
@@ -36,10 +18,12 @@ morgan.format(
   ":method :url :status :res[content-length] - :response-time ms :extentionJSON"
 );
 app.use(morgan("post"));
-app.use(express.static('build'))
+app.use(express.static("build"));
 
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((persons) => {
+    response.json(persons);
+  });
 });
 
 app.get("/info", (request, response) => {
@@ -54,7 +38,10 @@ app.get("/api/persons/:id", (request, response) => {
   const person = persons.find((p) => p.id === id);
 
   if (person) {
-    response.json(person);
+    // response.json(person);
+    Person.findById(request.params.id).then((person) => {
+      response.json(person);
+    });
   } else {
     response.status(404).end();
   }
@@ -76,24 +63,29 @@ app.post("/api/persons", (request, response) => {
     return response.status(400).json({
       error: "name missing/number missing",
     });
-  } else if (persons.find((p) => p.name === body.name)) {
-    return response.status(409).json({
-      error: "name must be unique",
-    });
   }
+  //   else if (persons.find((p) => p.name === body.name)) {
+  //     return response.status(409).json({
+  //       error: "name must be unique",
+  //     });
+  //   }
 
-  const person = {
-    id: parseInt(Math.random() * 100),
+  const person = new Person({
+    // id: parseInt(Math.random() * 100),
     name: body.name,
     number: body.number,
-  };
+  });
 
-  persons = persons.concat(person);
-  response.json(person);
+  person.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
+
+  //   persons = persons.concat(person);
+  //   response.json(person);
   //   console.log(request.body)
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
