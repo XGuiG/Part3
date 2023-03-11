@@ -1,7 +1,8 @@
-POST http://localhost:3001/api/persons
+POST  http://localhost:3003/api/users
 Content-Type: application/json
 
 {
-    "name": "xguigdfgdg",
-    "number": "27-83-364237"
+    "username": "Bi",
+    "name": "small gui",
+    "password": "1233"
 }
