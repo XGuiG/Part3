@@ -9,9 +9,9 @@ usersRouter.get("/", async (request, response) => {
 
 usersRouter.post("/", async (request, response) => {
   const { username, name, password } = request.body;
-  if (password.length < 3) {
+  if (!password || password.length < 3) {
     return response.status(400).json({
-        error: 'User validation failed: password is shorter than the minimum allowed length (3).'
+        error: 'User validation failed: `password` is shorter than the minimum allowed length (3).'
     })
   }
 
