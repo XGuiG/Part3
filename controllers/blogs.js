@@ -19,22 +19,23 @@ blogsRouter.post("/", middleware.userExtractor, async (request, response) => {
     likes: body.likes ? body.likes : 0,
   });
 
-  const savedBlog = await blog.save();
+  let savedBlog = await blog.save();
   user.blogs = user.blogs.concat(savedBlog._id);
   await user.save();
-
+  savedBlog = await Blog.findById(savedBlog._id).populate("user", { username: 1, name: 1 })
+  console.log(savedBlog)
   response.status(201).json(savedBlog);
 });
 
-blogsRouter.delete("/:id", async (request, response) => {
+blogsRouter.delete("/:id", middleware.userExtractor, async (request, response) => {
   const blogid = request.params.id;
+  console.log(blogid)
   const blog = await Blog.findById(blogid);
 
   if (!blog) {
-    return response.status(404).json({
-      error: "id does not exist or is incorrect",
-    });
+    return response.status(204).end()
   }
+
   const userid = request.user.id;
 
   if (!(blog.user.toString() === userid.toString())) {
@@ -47,16 +48,17 @@ blogsRouter.delete("/:id", async (request, response) => {
   response.status(204).end();
 });
 
-blogsRouter.put("/:id", async (request, response) => {
-  const { title, author, url, likes } = request.body;
-  const existingId = await Blog.findById(request.params.id);
-  if (!existingId) {
-    return response.status(404).end();
-  }
+blogsRouter.put("/:id", middleware.userExtractor, async (request, response) => {
+  // const { title, author, url, likes } = request.body;
+
+  // const existingId = await Blog.findById(request.params.id);
+  // if (!existingId) {
+  //   return response.status(404).end();
+  // }
 
   const updatedBlog = await Blog.findByIdAndUpdate(
     request.params.id,
-    { title, author, url, likes },
+    {$inc: {likes: 1}},
     { new: true, runValidators: true, context: "query" }
   );
   response.json(updatedBlog);
