@@ -22,30 +22,37 @@ blogsRouter.post("/", middleware.userExtractor, async (request, response) => {
   let savedBlog = await blog.save();
   user.blogs = user.blogs.concat(savedBlog._id);
   await user.save();
-  savedBlog = await Blog.findById(savedBlog._id).populate("user", { username: 1, name: 1 })
-  console.log(savedBlog)
+  savedBlog = await Blog.findById(savedBlog._id).populate("user", {
+    username: 1,
+    name: 1,
+  });
+  console.log(savedBlog);
   response.status(201).json(savedBlog);
 });
 
-blogsRouter.delete("/:id", middleware.userExtractor, async (request, response) => {
-  const blogid = request.params.id;
-  const blog = await Blog.findById(blogid);
+blogsRouter.delete(
+  "/:id",
+  middleware.userExtractor,
+  async (request, response) => {
+    const blogid = request.params.id;
+    const blog = await Blog.findById(blogid);
 
-  if (!blog) {
-    return response.status(204).end()
+    if (!blog) {
+      return response.status(204).end();
+    }
+
+    const userid = request.user.id;
+
+    if (!(blog.user.toString() === userid.toString())) {
+      return response.status(401).json({
+        error: "a blog can be deleted only by the user who added the blog",
+      });
+    }
+
+    await Blog.findByIdAndRemove(blogid);
+    response.status(204).end();
   }
-
-  const userid = request.user.id;
-
-  if (!(blog.user.toString() === userid.toString())) {
-    return response.status(401).json({
-      error: "a blog can be deleted only by the user who added the blog",
-    });
-  }
-
-  await Blog.findByIdAndRemove(blogid);
-  response.status(204).end();
-});
+);
 
 blogsRouter.put("/:id", middleware.userExtractor, async (request, response) => {
   // const { title, author, url, likes } = request.body;
@@ -57,10 +64,21 @@ blogsRouter.put("/:id", middleware.userExtractor, async (request, response) => {
 
   const updatedBlog = await Blog.findByIdAndUpdate(
     request.params.id,
-    {$inc: {likes: 1}},
+    { $inc: { likes: 1 } },
     { new: true, runValidators: true, context: "query" }
   );
   response.json(updatedBlog);
+});
+
+blogsRouter.post("/:id/comments", async (request, response) => {
+  const comment = request.body.comments;
+
+  const addComment = await Blog.findByIdAndUpdate(
+    request.params.id,
+    { $push: { comments: comment } },
+    { new: true }
+  );
+  response.json(addComment)
 });
 
 module.exports = blogsRouter;
