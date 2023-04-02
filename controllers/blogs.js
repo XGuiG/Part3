@@ -54,7 +54,7 @@ blogsRouter.delete(
   }
 );
 
-blogsRouter.put("/:id", middleware.userExtractor, async (request, response) => {
+blogsRouter.put("/:id", async (request, response) => {
   // const { title, author, url, likes } = request.body;
 
   // const existingId = await Blog.findById(request.params.id);
